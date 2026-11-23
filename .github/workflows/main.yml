@@ -1,0 +1,30 @@
+name: Build FIELD (Mac)
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release -j 4
+
+      - name: Package
+        run: |
+          mkdir out
+          cp -R build/Field_artefacts/Release/VST3/FIELD.vst3 out/
+          cp -R build/Field_artefacts/Release/AU/FIELD.component out/
+          codesign --force --deep --sign - out/FIELD.vst3
+          codesign --force --deep --sign - out/FIELD.component
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FIELD-Mac
+          path: out
